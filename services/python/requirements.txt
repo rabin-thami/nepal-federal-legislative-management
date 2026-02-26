@@ -1,0 +1,8 @@
+requests
+beautifulsoup4
+lxml
+httpx
+psycopg2-binary
+python-dotenv
+nepali-datetime
+apscheduler
