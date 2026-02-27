@@ -155,7 +155,7 @@ export const billStatusHistory = pgTable(
     id: uuid("id")
       .default(sql`pg_catalog.gen_random_uuid()`)
       .primaryKey(),
-    billId: integer("bill_id")
+    billId: uuid("bill_id")
       .notNull()
       .references(() => bills.id, { onDelete: "cascade" }),
 
@@ -200,7 +200,7 @@ export const committees = pgTable("committees", {
 
 export const billCommitteeAssignments = pgTable("bill_committee_assignments", {
   id: serial("id").primaryKey(),
-  billId: integer("bill_id")
+  billId: uuid("bill_id")
     .notNull()
     .references(() => bills.id, { onDelete: "cascade" }),
   committeeId: integer("committee_id")
