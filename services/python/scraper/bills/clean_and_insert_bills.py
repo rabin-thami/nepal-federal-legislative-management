@@ -57,6 +57,7 @@ def clean_and_normalize(bills: list) -> list:
     - Validate data types
     """
     cleaned_bills = []
+    seen = set()  # Track (registration_number, year) for dedup
 
     for bill in bills:
         # Create a cleaned copy
@@ -85,11 +86,21 @@ def clean_and_normalize(bills: list) -> list:
             "resource_link": bill.get("resource_link"),
         }
 
-        # TODO: Add your cleaning logic here
+        # Skip bills without essential identifiers
+        if not cleaned.get("bill_id") or not cleaned.get("registration_number"):
+            log.warning(f"Skipping bill with missing bill_id or registration_number")
+            continue
+
+        # Deduplicate by (registration_number, sambat/year)
+        dedup_key = f"{cleaned.get('registration_number')}_{cleaned.get('sambat') or cleaned.get('year', '')}"
+        if dedup_key in seen:
+            log.debug(f"Skipping duplicate bill: {dedup_key}")
+            continue
+        seen.add(dedup_key)
 
         cleaned_bills.append(cleaned)
 
-    log.info(f"Cleaned {len(cleaned_bills)} bills")
+    log.info(f"Cleaned {len(cleaned_bills)} bills (from {len(bills)} raw, {len(bills) - len(cleaned_bills)} removed)")
     return cleaned_bills
 
 

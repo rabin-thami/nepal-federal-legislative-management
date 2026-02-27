@@ -14,9 +14,9 @@ const mukta = Mukta({
 });
 
 export const metadata: Metadata = {
-  title: "Thami Dictionary",
+  title: "Vidhan - Nepal Federal Legislative Management System",
   description:
-    "A comprehensive Thami-English dictionary built with Next.js and TypeScript.",
+    "Track bills through Nepal's parliament in real time. A comprehensive platform for legislative transparency.",
 };
 
 export default function RootLayout({
@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body className={`${inter.variable} ${mukta.variable} antialiased`}>
         {children}
       </body>
