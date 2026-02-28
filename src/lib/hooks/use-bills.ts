@@ -1,30 +1,41 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Bill, BillsResponse, BillWithDetails } from "@/lib/types";
 import {
-  Bill,
-  BillsResponse,
-  BillWithDetails,
-} from "@/lib/types";
+  billsResponseSchema,
+  billWithDetailsResponseSchema,
+} from "@/lib/validation/responses";
+
+export type BillFilters = {
+  house?: string;
+  status?: string;
+  category?: string;
+  ministry?: string;
+  year?: string;
+  search?: string;
+  sort?: "newest" | "oldest" | "status";
+  limit?: number;
+  offset?: number;
+};
 
 // Base fetch function
-async function fetchBills(
-  filters?: {
-    house?: string;
-    status?: string;
-    ministry?: string;
-    limit?: number;
-  },
-): Promise<Bill[]> {
+async function fetchBills(filters?: BillFilters): Promise<BillsResponse> {
   const params = new URLSearchParams({
-    limit: (filters?.limit ?? 100).toString(),
+    limit: (filters?.limit ?? 25).toString(),
+    offset: (filters?.offset ?? 0).toString(),
   });
   if (filters?.house) params.set("house", filters.house);
   if (filters?.status) params.set("status", filters.status);
+  if (filters?.category) params.set("category", filters.category);
   if (filters?.ministry) params.set("ministry", filters.ministry);
+  if (filters?.year) params.set("year", filters.year);
+  if (filters?.search) params.set("search", filters.search);
+  if (filters?.sort) params.set("sort", filters.sort);
 
   const res = await fetch(`/api/bills?${params.toString()}`);
   if (!res.ok) throw new Error("Failed to fetch bills");
-  const json = (await res.json()) as BillsResponse;
-  return json.data;
+  const json = await res.json();
+  const parsed = billsResponseSchema.parse(json);
+  return parsed;
 }
 
 async function fetchBill(id: string): Promise<BillWithDetails> {
@@ -34,22 +45,17 @@ async function fetchBill(id: string): Promise<BillWithDetails> {
     throw new Error("Failed to fetch bill");
   }
   const json = await res.json();
-  return json.data;
+  const parsed = billWithDetailsResponseSchema.parse(json);
+  return parsed.data;
 }
 
 // Hook for fetching all bills
-export function useBills(
-  filters?: {
-    house?: string;
-    status?: string;
-    ministry?: string;
-    limit?: number;
-  },
-) {
+export function useBills(filters?: BillFilters) {
   return useQuery({
     queryKey: ["bills", filters],
     queryFn: () => fetchBills(filters),
     staleTime: 60_000, // 1 minute
+    placeholderData: (prev) => prev,
   });
 }
 

@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/drizzle";
 import { bills } from "@/db/schema";
 import { eq, sql, and, ilike, type SQL } from "drizzle-orm";
-
-export const runtime = "nodejs";
+import { z } from "zod";
+import { validateBillQuery, sanitizeErrorMessage } from "@/lib/validation/api";
+import { getClientIdentifier, rateLimit } from "@/lib/server/rate-limit";
 
 /**
  * GET /api/bills
@@ -12,26 +13,51 @@ export const runtime = "nodejs";
  *   house    — "pratinidhi_sabha" | "rastriya_sabha"
  *   status   — any billStatusEnum value
  *   category — "governmental" | "non_governmental"
- *   ministry — partial match (ilike)
- *   year     — BS year e.g. "2082"
- *   search   — searches titleNp, titleEn, registrationNo
+ *   ministry — partial match (ilike), max 200 chars
+ *   year     — 4-digit BS year e.g. "2082"
+ *   search   — searches titleNp, titleEn, registrationNo, max 200 chars
  *   sort     — "newest" (default) | "oldest" | "status"
- *   limit    — number (default 100, max 500)
- *   offset   — number (default 0) for pagination
+ *   limit    — number (default 25, max 100)
+ *   offset   — number (default 0, max 10000)
  */
 export async function GET(request: NextRequest) {
   try {
+    const { limited, headers: rateHeaders } = rateLimit(
+      getClientIdentifier(request),
+    );
+    if (limited) {
+      return NextResponse.json(
+        { error: "Too many requests" },
+        { status: 429, headers: rateHeaders },
+      );
+    }
+
     const { searchParams } = request.nextUrl;
 
-    const house = searchParams.get("house");
-    const status = searchParams.get("status");
-    const category = searchParams.get("category");
-    const ministry = searchParams.get("ministry");
-    const year = searchParams.get("year");
-    const search = searchParams.get("search");
-    const sort = searchParams.get("sort") || "newest";
-    const limit = Math.min(Number(searchParams.get("limit")) || 100, 500);
-    const offset = Number(searchParams.get("offset")) || 0;
+    let validated;
+    try {
+      validated = validateBillQuery(searchParams);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return NextResponse.json(
+          { error: "Invalid query parameters", details: err.issues },
+          { status: 400 },
+        );
+      }
+      throw err;
+    }
+
+    const {
+      house,
+      status,
+      category,
+      ministry,
+      year,
+      search,
+      sort,
+      limit,
+      offset,
+    } = validated;
 
     // Build WHERE conditions
     const conditions: SQL[] = [];
@@ -107,14 +133,14 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      { status: 200 },
+      { status: 200, headers: rateHeaders },
     );
   } catch (error) {
     console.error("GET /api/bills error:", error);
     return NextResponse.json(
       {
         error: "Failed to fetch bills",
-        message: error instanceof Error ? error.message : "Unknown error",
+        message: sanitizeErrorMessage(error),
       },
       { status: 500 },
     );

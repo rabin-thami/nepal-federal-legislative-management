@@ -21,7 +21,10 @@ export type BillType = "original" | "amendment";
 
 export type BillCategory = "governmental" | "non_governmental";
 
-export type StatusSource = "parliament_scrape" | "gazette_scrape" | "manual_entry";
+export type StatusSource =
+  | "parliament_scrape"
+  | "gazette_scrape"
+  | "manual_entry";
 
 export interface Committee {
   id: number;
@@ -92,12 +95,18 @@ export interface BillWithDetails extends Bill {
 export interface BillsResponse {
   data: Bill[];
   meta: {
+    total: number;
     count: number;
+    limit: number;
+    offset: number;
+    hasMore: boolean;
     filters: {
       house: string | null;
       status: string | null;
+      category: string | null;
       ministry: string | null;
-      limit: number;
+      year: string | null;
+      search: string | null;
     };
   };
 }
@@ -127,24 +136,42 @@ export function formatBillStatus(status: BillStatus | null): string {
 
 // Helper function to get status color
 export function getStatusColor(status: BillStatus | null): string {
-  if (!status) return "bg-slate-800 text-slate-300";
+  if (!status)
+    return "bg-slate-100 text-slate-600 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700/50";
 
   const colorMap: Partial<Record<BillStatus, string>> = {
-    registered: "bg-blue-900/50 text-blue-200 border-blue-700/50",
-    first_reading: "bg-cyan-900/50 text-cyan-200 border-cyan-700/50",
-    general_discussion: "bg-teal-900/50 text-teal-200 border-teal-700/50",
-    amendment_window: "bg-amber-900/50 text-amber-200 border-amber-700/50",
-    committee_review: "bg-purple-900/50 text-purple-200 border-purple-700/50",
-    clause_voting: "bg-pink-900/50 text-pink-200 border-pink-700/50",
-    first_house_passed: "bg-green-900/50 text-green-200 border-green-700/50",
-    second_house: "bg-emerald-900/50 text-emerald-200 border-emerald-700/50",
-    joint_sitting: "bg-indigo-900/50 text-indigo-200 border-indigo-700/50",
-    speaker_certification: "bg-violet-900/50 text-violet-200 border-violet-700/50",
-    assented: "bg-lime-900/50 text-lime-200 border-lime-700/50",
-    gazette_published: "bg-green-700/50 text-green-100 border-green-600/50",
+    registered:
+      "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/50 dark:text-blue-200 dark:border-blue-700/50",
+    first_reading:
+      "bg-cyan-100 text-cyan-700 border-cyan-300 dark:bg-cyan-900/50 dark:text-cyan-200 dark:border-cyan-700/50",
+    general_discussion:
+      "bg-teal-100 text-teal-700 border-teal-300 dark:bg-teal-900/50 dark:text-teal-200 dark:border-teal-700/50",
+    amendment_window:
+      "bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/50 dark:text-amber-200 dark:border-amber-700/50",
+    committee_review:
+      "bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/50 dark:text-purple-200 dark:border-purple-700/50",
+    clause_voting:
+      "bg-pink-100 text-pink-700 border-pink-300 dark:bg-pink-900/50 dark:text-pink-200 dark:border-pink-700/50",
+    first_house_passed:
+      "bg-green-100 text-green-700 border-green-300 dark:bg-green-900/50 dark:text-green-200 dark:border-green-700/50",
+    second_house:
+      "bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-900/50 dark:text-emerald-200 dark:border-emerald-700/50",
+    joint_sitting:
+      "bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-900/50 dark:text-indigo-200 dark:border-indigo-700/50",
+    speaker_certification:
+      "bg-violet-100 text-violet-700 border-violet-300 dark:bg-violet-900/50 dark:text-violet-200 dark:border-violet-700/50",
+    assented:
+      "bg-lime-100 text-lime-700 border-lime-300 dark:bg-lime-900/50 dark:text-lime-200 dark:border-lime-700/50",
+    gazette_published:
+      "bg-green-100 text-green-800 border-green-400 dark:bg-green-700/50 dark:text-green-100 dark:border-green-600/50",
+    amendment_or_repeal:
+      "bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-900/50 dark:text-orange-200 dark:border-orange-700/50",
   };
 
-  return colorMap[status] || "bg-slate-800 text-slate-300 border-slate-700/50";
+  return (
+    colorMap[status] ||
+    "bg-slate-100 text-slate-600 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700/50"
+  );
 }
 
 // Helper function to format house

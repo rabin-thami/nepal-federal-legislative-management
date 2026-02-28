@@ -27,7 +27,9 @@ const LiveTicker = ({ bills }: { bills: Bill[] }) => {
         <span className="font-mono font-bold text-primary-foreground/90">
           Bill #{t.id}
         </span>
-        <span className="text-secondary-foreground/80">{t.action}</span>
+        <span className="text-secondary-foreground/80 font-mukta">
+          {t.action}
+        </span>
         <span className="text-secondary-foreground/50 text-xs">• {t.time}</span>
       </div>
     ));

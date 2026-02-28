@@ -7,8 +7,8 @@ import {
   committees,
 } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
-
-export const runtime = "nodejs";
+import { sanitizeErrorMessage } from "@/lib/validation/api";
+import { getClientIdentifier, rateLimit } from "@/lib/server/rate-limit";
 
 /**
  * GET /api/bills/[id]
@@ -16,10 +16,20 @@ export const runtime = "nodejs";
  * Returns a single bill with its full status history and committee assignments.
  */
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { limited, headers: rateHeaders } = rateLimit(
+      getClientIdentifier(request),
+    );
+    if (limited) {
+      return NextResponse.json(
+        { error: "Too many requests" },
+        { status: 429, headers: rateHeaders },
+      );
+    }
+
     const { id } = await params;
 
     // Fetch the bill
@@ -72,14 +82,14 @@ export async function GET(
           committeeAssignments: committeeAssigns,
         },
       },
-      { status: 200 },
+      { status: 200, headers: rateHeaders },
     );
   } catch (error) {
     console.error("GET /api/bills/[id] error:", error);
     return NextResponse.json(
       {
         error: "Failed to fetch bill",
-        message: error instanceof Error ? error.message : "Unknown error",
+        message: sanitizeErrorMessage(error),
       },
       { status: 500 },
     );

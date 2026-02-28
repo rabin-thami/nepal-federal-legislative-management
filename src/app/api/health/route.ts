@@ -1,10 +1,22 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/drizzle";
+import { sanitizeErrorMessage } from "@/lib/validation/api";
+import { getClientIdentifier, rateLimit } from "@/lib/server/rate-limit";
 
-export const runtime = "nodejs";
-
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { limited, headers: rateHeaders } = rateLimit(
+      getClientIdentifier(request),
+      // Health checks are often hit by monitors; keep a relaxed limit.
+      { windowMs: 60_000, max: 120 },
+    );
+    if (limited) {
+      return NextResponse.json(
+        { status: "rate_limited" },
+        { status: 429, headers: rateHeaders },
+      );
+    }
+
     // Check database connection
     await db.execute(`SELECT 1`);
 
@@ -22,7 +34,7 @@ export async function GET() {
       },
     };
 
-    return NextResponse.json(health, { status: 200 });
+    return NextResponse.json(health, { status: 200, headers: rateHeaders });
   } catch (error) {
     return NextResponse.json(
       {
@@ -31,7 +43,7 @@ export async function GET() {
         checks: {
           database: {
             status: "disconnected",
-            error: error instanceof Error ? error.message : "Unknown error",
+            error: sanitizeErrorMessage(error),
           },
         },
       },

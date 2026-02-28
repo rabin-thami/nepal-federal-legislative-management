@@ -98,7 +98,7 @@ const BillExplorerMock = ({
                 clear progress, complete history.
               </p>
             </div>
-            <Link href="/app">
+            <Link href="/dashboard">
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
@@ -267,18 +267,18 @@ const BillExplorerMock = ({
                     <Users className="w-4 h-4 text-primary" /> Presenter &
                     Ministry
                   </h4>
-                  <div className="flex items-center gap-4 bg-muted/30 p-4 rounded-xl border border-border/30">
-                    <div className="w-12 h-12 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-bold text-lg">
+                  <div className="flex items-center gap-4 bg-muted/30 p-4 rounded-xl border border-border/30 font-mukta">
+                    <div className="w-12 h-12 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-bold text-xl">
                       {presenterInitials}
                     </div>
                     <div>
-                      <div className="text-foreground font-semibold">
+                      <div className="text-foreground font-semibold text-xl">
                         {displayPresenter}
                       </div>
-                      <div className="text-muted-foreground text-xs">
+                      <div className="text-muted-foreground text-md">
                         {displayMinistry}
                       </div>
-                      <div className="text-muted-foreground text-xs font-mukta">
+                      <div className="text-muted-foreground text-md">
                         {bill.ministry || "—"}
                       </div>
                     </div>

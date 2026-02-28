@@ -4,28 +4,20 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { Building2, Sun, Moon, ArrowRight, X, Menu } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isDark, setIsDark] = useState(true);
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+  const toggleTheme = () => setTheme(isDark ? "light" : "dark");
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
-    // Read initial theme state after mount
-    const dark = document.documentElement.classList.contains("dark");
-    if (dark !== isDark) {
-      queueMicrotask(() => setIsDark(dark));
-    }
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const toggleTheme = () => {
-    const html = document.documentElement;
-    html.classList.toggle("dark");
-    setIsDark(html.classList.contains("dark"));
-  };
+  }, []);
 
   const navLinks = ["Features", "How It Works", "Status Tracker", "About"];
 
@@ -149,7 +141,7 @@ const Navbar = () => {
                 </Link>
               ))}
               <Link
-                href="/app"
+                href="/dashboard"
                 onClick={() => setMobileMenuOpen(false)}
                 className="mt-2"
               >
